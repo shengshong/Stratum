@@ -1,8 +1,13 @@
-# Stratum
+<div align="center">
 
-**The self-optimization layer for AI agents.**
+![Stratum Banner](assets/stratum-banner.png)
 
-> *Your agent remembers. Learns. Improves.*
+[![License: MIT](https://img.shields.io/badge/License-MIT-slate.svg)](LICENSE)
+[![OpenClaw](https://img.shields.io/badge/requires-OpenClaw-4a90d9.svg)](https://github.com/openclaw/openclaw)
+[![Rust](https://img.shields.io/badge/core-Rust-orange.svg)](https://www.rust-lang.org/)
+[![Python](https://img.shields.io/badge/hub-Python-4a90d9.svg)](https://www.python.org/)
+
+</div>
 
 ---
 
@@ -31,6 +36,10 @@ Stratum is **infrastructure**, not an agent. It sits beneath your OpenClaw agent
 ---
 
 ## Architecture
+
+<div align="center">
+<img src="assets/stratum-logo.png" width="220" alt="Stratum logo" />
+</div>
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -241,4 +250,7 @@ MIT. Do what you want with it.
 
 ---
 
-*Named for what makes complex systems stable — the layer you don't see.*
+<div align="center">
+<img src="assets/stratum-icon.png" width="48" alt="Stratum icon" /><br/>
+<sub><i>Named for what makes complex systems stable — the layer you don't see.</i></sub>
+</div>
