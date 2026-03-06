@@ -1,0 +1,20 @@
+[project]
+name = "stratum-lens"
+version = "0.1.1"
+description = "Semantic workspace indexer for OpenClaw — query your memory files by meaning"
+authors = [{name = "{{AGENT_NAME}}", email = "undertow@parobek.org"}]
+requires-python = ">=3.11"
+
+dependencies = [
+    "chromadb>=1.0",
+    "fastembed>=0.4",
+    "click>=8",
+    "rich>=13",
+]
+
+[project.scripts]
+stratum-lens = "stratum_lens.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

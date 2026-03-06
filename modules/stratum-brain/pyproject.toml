@@ -1,0 +1,15 @@
+[project]
+name = "stratum-brain"
+version = "0.2.0"
+requires-python = ">=3.12"
+dependencies = [
+    "click>=8",
+    "rich>=13",
+]
+
+[project.scripts]
+stratum-brain = "stratum_brain.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
