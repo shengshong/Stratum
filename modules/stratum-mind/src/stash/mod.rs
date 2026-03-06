@@ -2,7 +2,7 @@
 
 use anyhow::Result;
 use colored::*;
-use rusqlite::{Connection, params};
+use rusqlite::{params, Connection};
 
 pub fn add(conn: &Connection, content: &str, priority: &str, tags: Option<&str>) -> Result<i64> {
     let tags_json = tags.map(|t| {
@@ -24,16 +24,19 @@ pub fn list(conn: &Connection, show_done: bool, priority_filter: Option<&str>) -
     };
 
     let mut stmt = conn.prepare(query)?;
-    let rows: Vec<_> = stmt.query_map([], |row| {
-        Ok((
-            row.get::<_, i64>(0)?,
-            row.get::<_, String>(1)?,
-            row.get::<_, String>(2)?,
-            row.get::<_, Option<String>>(3)?,
-            row.get::<_, i32>(4)?,
-            row.get::<_, String>(5)?,
-        ))
-    })?.filter_map(|r| r.ok()).collect();
+    let rows: Vec<_> = stmt
+        .query_map([], |row| {
+            Ok((
+                row.get::<_, i64>(0)?,
+                row.get::<_, String>(1)?,
+                row.get::<_, String>(2)?,
+                row.get::<_, Option<String>>(3)?,
+                row.get::<_, i32>(4)?,
+                row.get::<_, String>(5)?,
+            ))
+        })?
+        .filter_map(|r| r.ok())
+        .collect();
 
     if rows.is_empty() {
         println!("{}", "No stash items.".dimmed());
@@ -42,21 +45,38 @@ pub fn list(conn: &Connection, show_done: bool, priority_filter: Option<&str>) -
 
     for (id, content, priority, tags, done, created_at) in rows {
         if let Some(pf) = priority_filter {
-            if priority != pf { continue; }
+            if priority != pf {
+                continue;
+            }
         }
-        let prefix = if done == 1 { "✓".green() } else {
+        let prefix = if done == 1 {
+            "✓".green()
+        } else {
             match priority.as_str() {
                 "urgent" => "!".red().bold(),
-                "high"   => "↑".yellow(),
-                _        => "·".dimmed(),
+                "high" => "↑".yellow(),
+                _ => "·".dimmed(),
             }
         };
         let date = &created_at[..10];
-        let tag_str = tags.map(|t| {
-            let v: Vec<String> = serde_json::from_str(&t).unwrap_or_default();
-            if v.is_empty() { String::new() } else { format!(" [{}]", v.join(", ")) }
-        }).unwrap_or_default();
-        println!("{} {:>4}  {}{}  {}", prefix, id.to_string().dimmed(), content, tag_str.dimmed(), date.dimmed());
+        let tag_str = tags
+            .map(|t| {
+                let v: Vec<String> = serde_json::from_str(&t).unwrap_or_default();
+                if v.is_empty() {
+                    String::new()
+                } else {
+                    format!(" [{}]", v.join(", "))
+                }
+            })
+            .unwrap_or_default();
+        println!(
+            "{} {:>4}  {}{}  {}",
+            prefix,
+            id.to_string().dimmed(),
+            content,
+            tag_str.dimmed(),
+            date.dimmed()
+        );
     }
     Ok(())
 }

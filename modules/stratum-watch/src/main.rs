@@ -17,13 +17,15 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 use colored::Colorize;
 use dirs::{data_dir, home_dir};
-use rusqlite::{Connection, params};
+use rusqlite::{params, Connection};
 use std::path::PathBuf;
 use std::process::Command;
 
 fn db_path() -> PathBuf {
-    data_dir().unwrap_or_else(|| PathBuf::from("~/.local/share"))
-        .join("stratum").join("watch.db")
+    data_dir()
+        .unwrap_or_else(|| PathBuf::from("~/.local/share"))
+        .join("stratum")
+        .join("watch.db")
 }
 
 fn open_db() -> Result<Connection> {
@@ -31,7 +33,8 @@ fn open_db() -> Result<Connection> {
     std::fs::create_dir_all(path.parent().unwrap())?;
     let conn = Connection::open(&path)?;
     conn.execute_batch("PRAGMA journal_mode=WAL;")?;
-    conn.execute_batch("
+    conn.execute_batch(
+        "
         CREATE TABLE IF NOT EXISTS version_checks (
             id          INTEGER PRIMARY KEY AUTOINCREMENT,
             tool        TEXT NOT NULL,
@@ -47,12 +50,17 @@ fn open_db() -> Result<Connection> {
         );
         CREATE INDEX IF NOT EXISTS idx_obs_source ON observations(source, observed_at);
         CREATE INDEX IF NOT EXISTS idx_ver_tool ON version_checks(tool, checked_at);
-    ")?;
+    ",
+    )?;
     Ok(conn)
 }
 
 #[derive(Parser)]
-#[command(name = "stratum-watch", about = "Stratum observability hub", version = "0.1.0")]
+#[command(
+    name = "stratum-watch",
+    about = "Stratum observability hub",
+    version = "0.1.0"
+)]
 struct Cli {
     #[command(subcommand)]
     command: Cmd,
@@ -90,11 +98,17 @@ enum Cmd {
 }
 
 #[derive(Subcommand)]
-enum CronAction { Status }
+enum CronAction {
+    Status,
+}
 #[derive(Subcommand)]
-enum ContextAction { Status }
+enum ContextAction {
+    Status,
+}
 #[derive(Subcommand)]
-enum BufferAction { Status }
+enum BufferAction {
+    Status,
+}
 #[derive(Subcommand)]
 enum VersionAction {
     Check,
@@ -120,15 +134,27 @@ fn cron_status() -> Result<()> {
         let mut stmt = conn.prepare(
             "SELECT cron_name, status, strftime('%Y-%m-%d %H:%M', MAX(scanned_at), 'unixepoch') as last_run FROM cron_runs GROUP BY cron_name ORDER BY MAX(scanned_at) DESC LIMIT 10"
         ).unwrap_or_else(|_| conn.prepare("SELECT 'n/a', 'n/a', 'n/a' WHERE 0").unwrap());
-        stmt.query_map([], |r| Ok((r.get::<_,String>(0)?, r.get::<_,String>(1)?, r.get::<_,String>(2)?)))
-            .map(|rows| rows.filter_map(|r| r.ok()).collect::<Vec<_>>())
-            .unwrap_or_default()
+        stmt.query_map([], |r| {
+            Ok((
+                r.get::<_, String>(0)?,
+                r.get::<_, String>(1)?,
+                r.get::<_, String>(2)?,
+            ))
+        })
+        .map(|rows| rows.filter_map(|r| r.ok()).collect::<Vec<_>>())
+        .unwrap_or_default()
     };
     if rows.is_empty() {
         println!("{}", "No cron runs recorded".dimmed());
     } else {
         for (name, status, last) in rows {
-            let icon = if status == "success" { "✓".green() } else if status == "failure" { "✗".red() } else { "?".dimmed() };
+            let icon = if status == "success" {
+                "✓".green()
+            } else if status == "failure" {
+                "✗".red()
+            } else {
+                "?".dimmed()
+            };
             println!("  {} {} — {}", icon, name.bold(), last.dimmed());
         }
     }
@@ -146,7 +172,11 @@ fn context_status() -> Result<()> {
     let pct = data["pct"].as_f64().unwrap_or(0.0);
     let level = data["level"].as_str().unwrap_or("unknown");
     let bar_full = (pct / 5.0) as usize;
-    let bar = format!("{}{}", "█".repeat(bar_full), "░".repeat(20usize.saturating_sub(bar_full)));
+    let bar = format!(
+        "{}{}",
+        "█".repeat(bar_full),
+        "░".repeat(20usize.saturating_sub(bar_full))
+    );
     let colored_bar = match level {
         "high" | "critical" => bar.red(),
         "medium" => bar.yellow(),
@@ -164,10 +194,25 @@ fn buffer_status() -> Result<()> {
         return Ok(());
     }
     let conn = Connection::open(&db)?;
-    let total: i64 = conn.query_row("SELECT COUNT(*) FROM results", [], |r| r.get(0)).unwrap_or(0);
-    let unacked: i64 = conn.query_row("SELECT COUNT(*) FROM results WHERE status='captured'", [], |r| r.get(0)).unwrap_or(0);
-    let icon = if unacked > 50 { "⚠".yellow() } else { "✓".green() };
-    println!("  {} Buffer: {} total, {} unacknowledged", icon, total, unacked);
+    let total: i64 = conn
+        .query_row("SELECT COUNT(*) FROM results", [], |r| r.get(0))
+        .unwrap_or(0);
+    let unacked: i64 = conn
+        .query_row(
+            "SELECT COUNT(*) FROM results WHERE status='captured'",
+            [],
+            |r| r.get(0),
+        )
+        .unwrap_or(0);
+    let icon = if unacked > 50 {
+        "⚠".yellow()
+    } else {
+        "✓".green()
+    };
+    println!(
+        "  {} Buffer: {} total, {} unacknowledged",
+        icon, total, unacked
+    );
     Ok(())
 }
 
@@ -178,7 +223,10 @@ fn version_check(conn: &Connection) -> Result<()> {
     let out = Command::new("openclaw").arg("--version").output();
     if let Ok(o) = out {
         let ver = String::from_utf8_lossy(&o.stdout).trim().to_string();
-        conn.execute("INSERT INTO version_checks (tool, version) VALUES ('openclaw', ?1)", params![&ver])?;
+        conn.execute(
+            "INSERT INTO version_checks (tool, version) VALUES ('openclaw', ?1)",
+            params![&ver],
+        )?;
         println!("  openclaw: {}", ver.green());
     }
 
@@ -186,7 +234,10 @@ fn version_check(conn: &Connection) -> Result<()> {
     let out = Command::new("node").arg("--version").output();
     if let Ok(o) = out {
         let ver = String::from_utf8_lossy(&o.stdout).trim().to_string();
-        conn.execute("INSERT INTO version_checks (tool, version) VALUES ('node', ?1)", params![&ver])?;
+        conn.execute(
+            "INSERT INTO version_checks (tool, version) VALUES ('node', ?1)",
+            params![&ver],
+        )?;
         println!("  node: {}", ver.green());
     }
 
@@ -208,10 +259,14 @@ fn observe_git(conn: &Connection, path: &str) -> Result<()> {
     let source = format!("git:{}", path);
 
     // Check if this is new vs last observation
-    let last: Option<String> = conn.query_row(
-        "SELECT detail FROM observations WHERE source=?1 ORDER BY observed_at DESC LIMIT 1",
-        params![&source], |r| r.get(0)
-    ).ok().flatten();
+    let last: Option<String> = conn
+        .query_row(
+            "SELECT detail FROM observations WHERE source=?1 ORDER BY observed_at DESC LIMIT 1",
+            params![&source],
+            |r| r.get(0),
+        )
+        .ok()
+        .flatten();
 
     let is_new = last.as_deref() != Some(&log);
     if is_new && !log.is_empty() {
@@ -220,7 +275,9 @@ fn observe_git(conn: &Connection, path: &str) -> Result<()> {
             params![&source, &log],
         )?;
         println!("  {} New commits in {}:", "↑".green(), path);
-        for line in log.lines().take(3) { println!("    {}", line.dimmed()); }
+        for line in log.lines().take(3) {
+            println!("    {}", line.dimmed());
+        }
     } else {
         println!("  {} {} — no new commits", "✓".dimmed(), path);
     }
@@ -231,16 +288,32 @@ fn observe_status(conn: &Connection) -> Result<()> {
     let mut stmt = conn.prepare(
         "SELECT source, event, detail, observed_at FROM observations ORDER BY observed_at DESC LIMIT 10"
     )?;
-    let rows: Vec<_> = stmt.query_map([], |r| {
-        Ok((r.get::<_,String>(0)?, r.get::<_,String>(1)?, r.get::<_,Option<String>>(2)?, r.get::<_,String>(3)?))
-    })?.filter_map(|r| r.ok()).collect();
+    let rows: Vec<_> = stmt
+        .query_map([], |r| {
+            Ok((
+                r.get::<_, String>(0)?,
+                r.get::<_, String>(1)?,
+                r.get::<_, Option<String>>(2)?,
+                r.get::<_, String>(3)?,
+            ))
+        })?
+        .filter_map(|r| r.ok())
+        .collect();
 
     if rows.is_empty() {
         println!("{}", "No observations recorded yet".dimmed());
     } else {
         for (source, event, detail, at) in rows {
-            println!("  {} {} — {}  {}", "·".dimmed(), source.bold(), event, &at[..16].dimmed());
-            if let Some(d) = detail { println!("    {}", d.lines().next().unwrap_or("").dimmed()); }
+            println!(
+                "  {} {} — {}  {}",
+                "·".dimmed(),
+                source.bold(),
+                event,
+                &at[..16].dimmed()
+            );
+            if let Some(d) = detail {
+                println!("    {}", d.lines().next().unwrap_or("").dimmed());
+            }
         }
     }
     Ok(())
@@ -264,9 +337,15 @@ fn main() -> Result<()> {
     let cli = Cli::parse();
     match cli.command {
         Cmd::Status => full_status(&conn)?,
-        Cmd::Cron { action: CronAction::Status } => cron_status()?,
-        Cmd::Context { action: ContextAction::Status } => context_status()?,
-        Cmd::Buffer { action: BufferAction::Status } => buffer_status()?,
+        Cmd::Cron {
+            action: CronAction::Status,
+        } => cron_status()?,
+        Cmd::Context {
+            action: ContextAction::Status,
+        } => context_status()?,
+        Cmd::Buffer {
+            action: BufferAction::Status,
+        } => buffer_status()?,
         Cmd::Version { action } => match action {
             VersionAction::Check | VersionAction::Status => version_check(&conn)?,
         },

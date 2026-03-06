@@ -25,7 +25,11 @@ const DUMP_PATH: &str = "/tmp/stratum-agent-monitor-screen.txt";
 const CONFIRM_PROMPT: &str = "Do you want to proceed?";
 
 #[derive(Parser)]
-#[command(name = "stratum-agent-monitor", about = "Coding agent session monitor", version = "0.1.0")]
+#[command(
+    name = "stratum-agent-monitor",
+    about = "Coding agent session monitor",
+    version = "0.1.0"
+)]
 struct Cli {
     #[command(subcommand)]
     command: Cmd,
@@ -67,7 +71,11 @@ fn log(msg: &str) {
     let ts = chrono::Local::now().format("%H:%M:%S");
     let line = format!("[{}] {}\n", ts, msg);
     use std::io::Write;
-    if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(LOG_PATH) {
+    if let Ok(mut f) = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(LOG_PATH)
+    {
         let _ = f.write_all(line.as_bytes());
     }
 }
@@ -85,12 +93,16 @@ fn needs_nudge(screen: &str) -> bool {
 }
 
 fn is_complete(screen: &str, pattern: &str, also: &str) -> bool {
-    if pattern.is_empty() { return false; }
+    if pattern.is_empty() {
+        return false;
+    }
     // Simple substring check (patterns are short, no need for full regex overhead)
     let has_pattern = screen.contains(pattern) ||
         // Handle common escaped patterns like v0\.16\.0 → v0.16.0
         screen.contains(&pattern.replace("\\.", "."));
-    let has_also = also.split('|').any(|p| screen.to_lowercase().contains(&p.to_lowercase()));
+    let has_also = also
+        .split('|')
+        .any(|p| screen.to_lowercase().contains(&p.to_lowercase()));
     has_pattern && has_also
 }
 
@@ -107,7 +119,16 @@ fn send_nudge(session: &str) {
 
 fn notify(channel: &str, to: &str, msg: &str) {
     let _ = Command::new("openclaw")
-        .args(["message", "send", "--channel", channel, "--to", to, "--message", msg])
+        .args([
+            "message",
+            "send",
+            "--channel",
+            channel,
+            "--to",
+            to,
+            "--message",
+            msg,
+        ])
         .output();
     log(&format!("Notification sent: {}", msg));
 }
@@ -137,7 +158,14 @@ fn run_check(session: &str) -> Result<u8> {
 fn main() -> Result<()> {
     let cli = Cli::parse();
     match cli.command {
-        Cmd::Watch { session, complete_pattern, complete_also, notify_channel, notify_to, notify_msg } => {
+        Cmd::Watch {
+            session,
+            complete_pattern,
+            complete_also,
+            notify_channel,
+            notify_to,
+            notify_msg,
+        } => {
             log(&format!("Monitor started for session '{}'", session));
             // Single check + completion test (called by cron every 5m)
             let screen = dump_screen(&session)?;
@@ -156,7 +184,9 @@ fn main() -> Result<()> {
             let log = std::fs::read_to_string(LOG_PATH).unwrap_or_else(|_| "(no log yet)".into());
             let lines: Vec<&str> = log.lines().collect();
             let tail = lines.iter().rev().take(20).collect::<Vec<_>>();
-            for line in tail.iter().rev() { println!("{}", line); }
+            for line in tail.iter().rev() {
+                println!("{}", line);
+            }
         }
     }
     Ok(())

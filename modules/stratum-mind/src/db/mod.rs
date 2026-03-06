@@ -4,7 +4,7 @@
 
 use anyhow::Result;
 use dirs::data_dir;
-use rusqlite::{Connection, params};
+use rusqlite::Connection;
 use std::path::PathBuf;
 
 pub fn db_path() -> PathBuf {
@@ -114,7 +114,8 @@ fn migrate_v2(conn: &Connection) -> Result<()> {
     // Add decay tracking columns to beliefs if they don't exist yet
     let cols: Vec<String> = {
         let mut stmt = conn.prepare("PRAGMA table_info(beliefs)")?;
-        let rows: Vec<String> = stmt.query_map([], |r| r.get::<_, String>(1))?
+        let rows: Vec<String> = stmt
+            .query_map([], |r| r.get::<_, String>(1))?
             .filter_map(|r| r.ok())
             .collect();
         rows
@@ -124,22 +125,24 @@ fn migrate_v2(conn: &Connection) -> Result<()> {
         conn.execute_batch(
             "ALTER TABLE beliefs ADD COLUMN last_verified TEXT;
              ALTER TABLE beliefs ADD COLUMN decay_rate REAL NOT NULL DEFAULT 0.05;
-             ALTER TABLE beliefs ADD COLUMN stale INTEGER NOT NULL DEFAULT 0;"
+             ALTER TABLE beliefs ADD COLUMN stale INTEGER NOT NULL DEFAULT 0;",
         )?;
         // Backfill last_verified with updated_at for existing rows
-        conn.execute_batch("UPDATE beliefs SET last_verified = updated_at WHERE last_verified IS NULL;")?;
+        conn.execute_batch(
+            "UPDATE beliefs SET last_verified = updated_at WHERE last_verified IS NULL;",
+        )?;
     }
 
     // FTS5 virtual table over beliefs (keyword search)
     conn.execute_batch(
         "CREATE VIRTUAL TABLE IF NOT EXISTS beliefs_fts
-         USING fts5(entity, attribute, value, content=beliefs, content_rowid=id);"
+         USING fts5(entity, attribute, value, content=beliefs, content_rowid=id);",
     )?;
 
     // FTS5 virtual table over lessons
     conn.execute_batch(
         "CREATE VIRTUAL TABLE IF NOT EXISTS lessons_fts
-         USING fts5(content, category, content=lessons, content_rowid=id);"
+         USING fts5(content, category, content=lessons, content_rowid=id);",
     )?;
 
     // Consolidation run log
@@ -152,7 +155,7 @@ fn migrate_v2(conn: &Connection) -> Result<()> {
             conflicts    INTEGER NOT NULL DEFAULT 0,
             fts_rebuilt  INTEGER NOT NULL DEFAULT 1,
             summary      TEXT
-        );"
+        );",
     )?;
 
     Ok(())

@@ -3,16 +3,23 @@
 //         DKMS module signatures, systemd failed units.
 // Runs as systemd oneshot at boot. Outputs JSON status + stashes failures.
 
+use chrono::Utc;
+use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::Path;
 use std::process::Command;
-use serde::{Deserialize, Serialize};
-use chrono::Utc;
 
 const STATUS_DIR: &str = "$HOME/.local/share/stratum-boot-health";
 const STASH_BIN: &str = "$HOME/.local/bin/stash";
 const EXPECTED_CERT_CN: &str = "Stratum Module Signing CA";
-const DKMS_MODULES: &[&str] = &["vmmon", "vmnet", "nvidia", "nvidia-modeset", "nvidia-uvm", "nvidia-drm"];
+const DKMS_MODULES: &[&str] = &[
+    "vmmon",
+    "vmnet",
+    "nvidia",
+    "nvidia-modeset",
+    "nvidia-uvm",
+    "nvidia-drm",
+];
 const KERNEL_MODULE_DIRS: &str = "/usr/lib/modules";
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -51,24 +58,38 @@ fn check_secure_boot() -> CheckResult {
             let enabled = bytes[4] == 1;
             return CheckResult {
                 ok: enabled,
-                detail: if enabled { "Secure Boot: enabled".into() } else { "Secure Boot: DISABLED".into() },
+                detail: if enabled {
+                    "Secure Boot: enabled".into()
+                } else {
+                    "Secure Boot: DISABLED".into()
+                },
             };
         }
     }
-    CheckResult { ok: false, detail: "Secure Boot: EFI variable not readable".into() }
+    CheckResult {
+        ok: false,
+        detail: "Secure Boot: EFI variable not readable".into(),
+    }
 }
 
 fn check_lockdown() -> CheckResult {
     match fs::read_to_string("/sys/kernel/security/lockdown") {
         Ok(content) => {
-            let active = content.split_whitespace()
+            let active = content
+                .split_whitespace()
                 .find(|s| s.starts_with('[') && s.ends_with(']'))
                 .map(|s| s.trim_matches(|c| c == '[' || c == ']').to_string())
                 .unwrap_or_else(|| "none".into());
             let ok = active == "integrity" || active == "confidentiality";
-            CheckResult { ok, detail: format!("lockdown={}", active) }
+            CheckResult {
+                ok,
+                detail: format!("lockdown={}", active),
+            }
         }
-        Err(e) => CheckResult { ok: false, detail: format!("Cannot read lockdown: {}", e) },
+        Err(e) => CheckResult {
+            ok: false,
+            detail: format!("Cannot read lockdown: {}", e),
+        },
     }
 }
 
@@ -85,44 +106,72 @@ fn check_signing_cert() -> CheckResult {
                 },
             }
         }
-        Err(e) => CheckResult { ok: false, detail: format!("Cannot read /proc/keys: {}", e) },
+        Err(e) => CheckResult {
+            ok: false,
+            detail: format!("Cannot read /proc/keys: {}", e),
+        },
     }
 }
 
 fn check_dkms_modules() -> Vec<ModuleCheck> {
     let mut results = Vec::new();
-    let Ok(kernels) = fs::read_dir(KERNEL_MODULE_DIRS) else { return results };
+    let Ok(kernels) = fs::read_dir(KERNEL_MODULE_DIRS) else {
+        return results;
+    };
 
     for entry in kernels.flatten() {
         let kver = entry.file_name().to_string_lossy().to_string();
         let dkms_dir = format!("{}/{}/updates/dkms", KERNEL_MODULE_DIRS, kver);
-        if !Path::new(&dkms_dir).exists() { continue; }
+        if !Path::new(&dkms_dir).exists() {
+            continue;
+        }
 
         for &modname in DKMS_MODULES {
             let mod_path = format!("{}/{}.ko.zst", dkms_dir, modname);
-            if !Path::new(&mod_path).exists() { continue; }
+            if !Path::new(&mod_path).exists() {
+                continue;
+            }
 
             let output = Command::new("modinfo").arg(&mod_path).output();
             match output {
                 Ok(out) => {
                     let stdout = String::from_utf8_lossy(&out.stdout);
-                    let signer = stdout.lines()
-                        .find(|l| l.starts_with("signer:"))
-                        .map(|l| l.split_once(':').map(|x| x.1.trim().to_string()).unwrap_or_default());
-                    let hashalgo = stdout.lines()
-                        .find(|l| l.starts_with("sig_hashalgo:"))
-                        .map(|l| l.split_once(':').map(|x| x.1.trim().to_string()).unwrap_or_default());
+                    let signer = stdout.lines().find(|l| l.starts_with("signer:")).map(|l| {
+                        l.split_once(':')
+                            .map(|x| x.1.trim().to_string())
+                            .unwrap_or_default()
+                    });
+                    let hashalgo =
+                        stdout
+                            .lines()
+                            .find(|l| l.starts_with("sig_hashalgo:"))
+                            .map(|l| {
+                                l.split_once(':')
+                                    .map(|x| x.1.trim().to_string())
+                                    .unwrap_or_default()
+                            });
                     let ok = signer.as_deref() == Some(EXPECTED_CERT_CN)
                         && hashalgo.as_deref() == Some("sha512");
                     let detail = match (&signer, &hashalgo) {
                         (Some(s), Some(h)) => format!("signer={} algo={}", s, h),
                         _ => "no signature info".into(),
                     };
-                    results.push(ModuleCheck { name: modname.into(), kernel: kver.clone(), ok, signer, sig_hashalgo: hashalgo, detail });
+                    results.push(ModuleCheck {
+                        name: modname.into(),
+                        kernel: kver.clone(),
+                        ok,
+                        signer,
+                        sig_hashalgo: hashalgo,
+                        detail,
+                    });
                 }
                 Err(e) => results.push(ModuleCheck {
-                    name: modname.into(), kernel: kver.clone(), ok: false,
-                    signer: None, sig_hashalgo: None, detail: format!("modinfo failed: {}", e),
+                    name: modname.into(),
+                    kernel: kver.clone(),
+                    ok: false,
+                    signer: None,
+                    sig_hashalgo: None,
+                    detail: format!("modinfo failed: {}", e),
                 }),
             }
         }
@@ -131,17 +180,29 @@ fn check_dkms_modules() -> Vec<ModuleCheck> {
 }
 
 fn check_systemd_failed() -> CheckResult {
-    match Command::new("systemctl").args(["--failed", "--no-legend", "--no-pager"]).output() {
+    match Command::new("systemctl")
+        .args(["--failed", "--no-legend", "--no-pager"])
+        .output()
+    {
         Ok(out) => {
             let stdout = String::from_utf8_lossy(&out.stdout);
             let lines: Vec<&str> = stdout.lines().filter(|l| !l.trim().is_empty()).collect();
             if lines.is_empty() {
-                CheckResult { ok: true, detail: "0 failed units".into() }
+                CheckResult {
+                    ok: true,
+                    detail: "0 failed units".into(),
+                }
             } else {
-                CheckResult { ok: false, detail: format!("{} failed: {}", lines.len(), lines.join(", ")) }
+                CheckResult {
+                    ok: false,
+                    detail: format!("{} failed: {}", lines.len(), lines.join(", ")),
+                }
             }
         }
-        Err(e) => CheckResult { ok: false, detail: format!("systemctl error: {}", e) },
+        Err(e) => CheckResult {
+            ok: false,
+            detail: format!("systemctl error: {}", e),
+        },
     }
 }
 
@@ -157,21 +218,40 @@ fn main() {
     let systemd_failed = check_systemd_failed();
 
     let mut failures = Vec::new();
-    if !secure_boot.ok { failures.push(format!("⚠️  {}", secure_boot.detail)); }
-    if !lockdown.ok { failures.push(format!("⚠️  {}", lockdown.detail)); }
-    if !signing_cert.ok { failures.push(format!("⚠️  {}", signing_cert.detail)); }
-    for m in &dkms_modules {
-        if !m.ok { failures.push(format!("⚠️  module {}/{}: {}", m.kernel, m.name, m.detail)); }
+    if !secure_boot.ok {
+        failures.push(format!("⚠️  {}", secure_boot.detail));
     }
-    if !systemd_failed.ok { failures.push(format!("⚠️  {}", systemd_failed.detail)); }
+    if !lockdown.ok {
+        failures.push(format!("⚠️  {}", lockdown.detail));
+    }
+    if !signing_cert.ok {
+        failures.push(format!("⚠️  {}", signing_cert.detail));
+    }
+    for m in &dkms_modules {
+        if !m.ok {
+            failures.push(format!("⚠️  module {}/{}: {}", m.kernel, m.name, m.detail));
+        }
+    }
+    if !systemd_failed.ok {
+        failures.push(format!("⚠️  {}", systemd_failed.detail));
+    }
 
-    let overall = if failures.is_empty() { "healthy".to_string() } else { "degraded".to_string() };
+    let overall = if failures.is_empty() {
+        "healthy".to_string()
+    } else {
+        "degraded".to_string()
+    };
 
     let status = HealthStatus {
         timestamp: Utc::now().to_rfc3339(),
         kernel: kernel.clone(),
-        secure_boot, lockdown, signing_cert, dkms_modules, systemd_failed,
-        overall: overall.clone(), failures: failures.clone(),
+        secure_boot,
+        lockdown,
+        signing_cert,
+        dkms_modules,
+        systemd_failed,
+        overall: overall.clone(),
+        failures: failures.clone(),
     };
 
     let _ = fs::create_dir_all(STATUS_DIR);
@@ -179,25 +259,35 @@ fn main() {
         let _ = fs::write(format!("{}/status.json", STATUS_DIR), &json);
     }
 
-    let mut feed = format!("# Boot Health Feed\n*Updated: {}*\n\nKernel: {}\nOverall: **{}**\n\n",
-        status.timestamp, kernel, overall);
+    let mut feed = format!(
+        "# Boot Health Feed\n*Updated: {}*\n\nKernel: {}\nOverall: **{}**\n\n",
+        status.timestamp, kernel, overall
+    );
     feed.push_str(&format!("- Secure Boot: {}\n", status.secure_boot.detail));
     feed.push_str(&format!("- Lockdown: {}\n", status.lockdown.detail));
     feed.push_str(&format!("- Signing cert: {}\n", status.signing_cert.detail));
     feed.push_str(&format!("- systemd: {}\n", status.systemd_failed.detail));
     if !failures.is_empty() {
         feed.push_str("\n## Failures\n");
-        for f in &failures { feed.push_str(&format!("- {}\n", f)); }
+        for f in &failures {
+            feed.push_str(&format!("- {}\n", f));
+        }
     }
     let _ = fs::write(format!("{}/feed.md", STATUS_DIR), feed);
 
     for failure in &failures {
-        let _ = Command::new(STASH_BIN).arg(format!("stratum-boot-health: {}", failure)).output();
+        let _ = Command::new(STASH_BIN)
+            .arg(format!("stratum-boot-health: {}", failure))
+            .output();
     }
 
     println!("stratum-boot-health: {} (kernel: {})", overall, kernel);
-    for f in &failures { println!("  {}", f); }
-    if failures.is_empty() { println!("  ✅ All checks passed"); }
+    for f in &failures {
+        println!("  {}", f);
+    }
+    if failures.is_empty() {
+        println!("  ✅ All checks passed");
+    }
 
     std::process::exit(if overall == "degraded" { 1 } else { 0 });
 }

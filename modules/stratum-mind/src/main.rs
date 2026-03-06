@@ -33,14 +33,18 @@ use colored::Colorize;
 use rusqlite::params;
 
 mod db;
-mod stash;
-mod lesson;
-mod world;
 mod goals;
+mod lesson;
 mod memory;
+mod stash;
+mod world;
 
 #[derive(Parser)]
-#[command(name = "stratum-mind", about = "Stratum unified knowledge store", version = "0.1.0")]
+#[command(
+    name = "stratum-mind",
+    about = "Stratum unified knowledge store",
+    version = "0.1.0"
+)]
 struct Cli {
     #[command(subcommand)]
     command: Command,
@@ -222,10 +226,7 @@ enum GoalsAction {
     /// Add evaluation note to a goal
     Eval { id: i64, note: String },
     /// Mark a goal complete
-    Complete {
-        id: i64,
-        note: Option<String>,
-    },
+    Complete { id: i64, note: Option<String> },
     /// Goal statistics
     Status,
 }
@@ -248,7 +249,11 @@ fn main() -> Result<()> {
 
     match cli.command {
         Command::Stash { action } => match action {
-            StashAction::Add { content, priority, tags } => {
+            StashAction::Add {
+                content,
+                priority,
+                tags,
+            } => {
                 let id = stash::add(&conn, &content, &priority, tags.as_deref())?;
                 println!("Stash [{}] added.", id);
             }
@@ -256,22 +261,50 @@ fn main() -> Result<()> {
                 stash::list(&conn, all, priority.as_deref())?;
             }
             StashAction::Done { id } => {
-                if stash::done(&conn, id)? { println!("Stash [{}] marked done.", id); }
-                else { println!("Not found: {}", id); }
+                if stash::done(&conn, id)? {
+                    println!("Stash [{}] marked done.", id);
+                } else {
+                    println!("Not found: {}", id);
+                }
             }
             StashAction::Remove { id } => {
-                if stash::remove(&conn, id)? { println!("Stash [{}] removed.", id); }
-                else { println!("Not found: {}", id); }
+                if stash::remove(&conn, id)? {
+                    println!("Stash [{}] removed.", id);
+                } else {
+                    println!("Not found: {}", id);
+                }
             }
         },
 
         Command::Lesson { action } => match action {
-            LessonAction::Learn { content, category, severity, source } => {
+            LessonAction::Learn {
+                content,
+                category,
+                severity,
+                source,
+            } => {
                 let id = lesson::learn(&conn, &content, &category, &severity, source.as_deref())?;
-                println!("✓ Lesson [{}] recorded ({}/{}) {}", id, severity, category, &content[..content.len().min(60)]);
+                println!(
+                    "✓ Lesson [{}] recorded ({}/{}) {}",
+                    id,
+                    severity,
+                    category,
+                    &content[..content.len().min(60)]
+                );
             }
-            LessonAction::List { severity, category, resolved, limit } => {
-                lesson::list(&conn, severity.as_deref(), category.as_deref(), resolved, limit)?;
+            LessonAction::List {
+                severity,
+                category,
+                resolved,
+                limit,
+            } => {
+                lesson::list(
+                    &conn,
+                    severity.as_deref(),
+                    category.as_deref(),
+                    resolved,
+                    limit,
+                )?;
             }
             LessonAction::Resolve { id, note } => {
                 if lesson::resolve(&conn, id, note.as_deref())? {
@@ -288,44 +321,85 @@ fn main() -> Result<()> {
                 WorldAddKind::Entity { name, r#type, desc } => {
                     world::add_entity(&conn, &name, &r#type, desc.as_deref())?;
                 }
-                WorldAddKind::Relation { subject, predicate, object } => {
+                WorldAddKind::Relation {
+                    subject,
+                    predicate,
+                    object,
+                } => {
                     world::add_relation(&conn, &subject, &predicate, &object)?;
                 }
-                WorldAddKind::Belief { entity, attribute, value, confidence, evidence } => {
-                    world::add_belief(&conn, &entity, &attribute, &value, confidence, evidence.as_deref())?;
+                WorldAddKind::Belief {
+                    entity,
+                    attribute,
+                    value,
+                    confidence,
+                    evidence,
+                } => {
+                    world::add_belief(
+                        &conn,
+                        &entity,
+                        &attribute,
+                        &value,
+                        confidence,
+                        evidence.as_deref(),
+                    )?;
                 }
             },
             WorldAction::Query { term } => world::query(&conn, &term)?,
             WorldAction::Traverse { entity, hops } => world::traverse(&conn, &entity, hops)?,
             WorldAction::Search { query } => world::search(&conn, &query)?,
-            WorldAction::Consolidate { decay_days, stale_threshold, dry_run } => {
+            WorldAction::Consolidate {
+                decay_days,
+                stale_threshold,
+                dry_run,
+            } => {
                 world::consolidate(&conn, decay_days, stale_threshold, dry_run)?;
             }
             WorldAction::ConsolidateLog => world::consolidation_log(&conn)?,
-            WorldAction::Verify { entity, attribute, confidence } => {
+            WorldAction::Verify {
+                entity,
+                attribute,
+                confidence,
+            } => {
                 conn.execute(
                     "UPDATE beliefs SET confidence=?1, last_verified=datetime('now'), stale=0, updated_at=datetime('now') WHERE entity=?2 AND attribute=?3",
                     params![confidence, entity, attribute],
                 )?;
-                println!("✓ Belief {}[{}] verified (conf={:.1}).", entity.bold(), attribute.cyan(), confidence);
+                println!(
+                    "✓ Belief {}[{}] verified (conf={:.1}).",
+                    entity.bold(),
+                    attribute.cyan(),
+                    confidence
+                );
             }
             WorldAction::Status => world::status(&conn)?,
         },
 
         Command::Goals { action } => match action {
-            GoalsAction::Add { title, desc, parent, priority } => {
+            GoalsAction::Add {
+                title,
+                desc,
+                parent,
+                priority,
+            } => {
                 goals::add(&conn, &title, desc.as_deref(), parent, &priority)?;
             }
             GoalsAction::List { tree, status } => {
                 goals::list(&conn, tree, status.as_deref())?;
             }
             GoalsAction::Eval { id, note } => {
-                if goals::eval(&conn, id, &note)? { println!("Goal [{}] evaluated.", id); }
-                else { println!("Not found: {}", id); }
+                if goals::eval(&conn, id, &note)? {
+                    println!("Goal [{}] evaluated.", id);
+                } else {
+                    println!("Not found: {}", id);
+                }
             }
             GoalsAction::Complete { id, note } => {
-                if goals::complete(&conn, id, note.as_deref())? { println!("Goal [{}] complete.", id); }
-                else { println!("Not found: {}", id); }
+                if goals::complete(&conn, id, note.as_deref())? {
+                    println!("Goal [{}] complete.", id);
+                } else {
+                    println!("Not found: {}", id);
+                }
             }
             GoalsAction::Status => goals::status_cmd(&conn)?,
         },
