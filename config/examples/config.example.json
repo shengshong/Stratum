@@ -1,0 +1,51 @@
+{
+  "_comment": "Copy this to ~/.stratum/config.json and fill in your values.",
+  "_note": "Never commit ~/.stratum/config.json — it is gitignored.",
+
+  "user": {
+    "name": "Your Name",
+    "timezone": "America/New_York",
+    "telegram_id": ""
+  },
+
+  "paths": {
+    "workspace": "~/clawd",
+    "data": "~/.local/share/stratum",
+    "bin": "~/.local/bin"
+  },
+
+  "modules": {
+    "lens": {
+      "auto_scale_threshold": 0.85,
+      "embedding_model": "all-MiniLM-L6-v2",
+      "chroma_path": "~/.local/share/stratum/chroma"
+    },
+    "brain": {
+      "consolidation_hour": 3,
+      "belief_decay_days": 30,
+      "fts_weight_semantic": 0.6,
+      "fts_weight_keyword": 0.4
+    },
+    "continuity": {
+      "snapshot_interval_hours": 2,
+      "brief_max_words": 500
+    },
+    "watch": {
+      "context_alert_threshold": 0.6,
+      "version_stale_days": 14
+    }
+  },
+
+  "notifications": {
+    "channel": "telegram",
+    "quiet_hours_start": "23:00",
+    "quiet_hours_end": "08:00"
+  },
+
+  "hosts": {
+    "primary": {
+      "name": "primary",
+      "hostname": "localhost"
+    }
+  }
+}

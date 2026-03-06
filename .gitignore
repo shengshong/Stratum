@@ -1,0 +1,56 @@
+# Compiled artifacts
+target/
+*.rlib
+*.rmeta
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+*.egg-info/
+dist/
+build/
+
+# Data & databases (NEVER commit these)
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# Secrets & credentials (NEVER commit these)
+secrets.json
+*.key
+*.pem
+*.token
+config/local/
+.env
+.env.*
+
+# Personal data (NEVER commit these)
+MEMORY.md
+USER.md
+memory/
+.stratum/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*~
+
+# Logs
+*.log
+logs/
+
+# Node (if any tooling)
+node_modules/
+
+# Temporary
+*.tmp
+/tmp/
