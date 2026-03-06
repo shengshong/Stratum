@@ -20,7 +20,7 @@ Install it once. Your agent gets better every session.
 
 ---
 
-![Stratum logo](assets/stratum-logo.png)
+<img src="assets/stratum-logo.png" width="200" alt="Stratum logo" />
 
 ## What Stratum Is
 
